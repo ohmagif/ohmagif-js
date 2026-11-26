@@ -51,6 +51,10 @@ jobs:
   # package reads.
   test-integration:
     runs-on: ubuntu-latest
+    env: &api-key
+      # The example's key: works from ohmagif.github.io and localhost:8082
+      # and 8083, and from the tests' own code.
+      OHMAGIF_API_KEY: ${{ secrets.OHMAGIF_API_KEY }}
     steps:
       - uses: actions/checkout@v7
       - *setup-node
@@ -60,6 +64,7 @@ jobs:
   # Playwright on the example, built as Pages serves it, against the live API.
   e2e:
     runs-on: ubuntu-latest
+    env: *api-key
     steps:
       - uses: actions/checkout@v7
       - *setup-node
@@ -92,6 +97,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    env: *api-key
     permissions:
       contents: write
     concurrency:

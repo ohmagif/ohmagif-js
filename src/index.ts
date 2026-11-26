@@ -1,4 +1,5 @@
 export {
+  isApiKey,
   OhmagifError,
   OhmagifFetch,
   type GifResult,

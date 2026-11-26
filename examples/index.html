@@ -3,8 +3,9 @@
   A chat composer with a GIF picker, the way a chat app uses this package:
   the picker searches ohmagif and a picked GIF is sent as a message that
   holds only its id; each message asks the API for the GIF when it shows.
-  `make example` serves it on http://localhost:8082/. ?base= points it at
-  another ohmagif, e.g. ?base=http://localhost:8080 for a local stack.
+  `make example` serves it on http://localhost:8082/, with the API key in
+  OHMAGIF_API_KEY or ?key=. ?base= points it at another ohmagif, e.g.
+  ?base=http://localhost:8080 for a local stack.
 -->
 <html lang="en">
 <head>

@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { OhmagifError, OhmagifFetch } from "./fetch.js";
+import { isApiKey, OhmagifError, OhmagifFetch } from "./fetch.js";
 import { apiGif, gifId, json } from "./test/fixtures.js";
 
 type Call = { url: URL; init: RequestInit };
+
+/** A key of the right shape; the tests' answers do not check it. */
+const KEY = "omg_0123456789abcdefghijABCDEFGHIJKL";
 
 /** A client whose requests are recorded and answered by `answer`. */
 function client(answer: (url: URL) => Response | Promise<Response> = () => json({ results: [], next: null, total: 0 }), options = {}) {
@@ -12,7 +15,7 @@ function client(answer: (url: URL) => Response | Promise<Response> = () => json(
     calls.push({ url, init: init ?? {} });
     return answer(url);
   });
-  return { gf: new OhmagifFetch({ fetch, ...options }), calls, fetch };
+  return { gf: new OhmagifFetch({ apiKey: KEY, fetch, ...options }), calls, fetch };
 }
 
 function list(n: number, extra: Record<string, unknown> = {}) {
@@ -25,14 +28,14 @@ afterEach(() => {
 });
 
 describe("requests", () => {
-  it("asks for trending GIFs without anything of the page", async () => {
+  it("asks for trending GIFs with the key and nothing of the page", async () => {
     const { gf, calls } = client(() => list(2));
     const res = await gf.trending();
     expect(calls).toHaveLength(1);
     const { url, init } = calls[0]!;
     expect(url.href).toBe("https://ohmagif.com/api/v1/trending?limit=25&offset=0");
     expect(init).toMatchObject({ method: "GET", credentials: "omit", referrerPolicy: "no-referrer", mode: "cors" });
-    expect(init.headers).toEqual({ Accept: "application/json" });
+    expect(init.headers).toEqual({ Accept: "application/json", Authorization: `Bearer ${KEY}` });
     expect(res.data.map((g) => g.id)).toEqual([gifId(1), gifId(2)]);
     expect(res.pagination).toEqual({ total_count: 100, count: 2, offset: 0, next: 2 });
   });
@@ -59,19 +62,35 @@ describe("requests", () => {
   });
 
   it.each([
-    ["alone", "  omg_abc  "],
-    ["in the options", { apiKey: "omg_abc" }],
+    ["alone", `  ${KEY}  `],
+    ["in the options", { apiKey: KEY }],
   ])("sends a key given %s as a bearer token", async (_, options) => {
     const sent: RequestInit[] = [];
     vi.stubGlobal("fetch", async (_input: unknown, init: RequestInit) => (sent.push(init), list(0)));
     await new OhmagifFetch(options).trending();
-    expect(sent[0]!.headers).toEqual({ Accept: "application/json", Authorization: "Bearer omg_abc" });
+    expect(sent[0]!.headers).toEqual({ Accept: "application/json", Authorization: `Bearer ${KEY}` });
   });
 
-  it("sends no key when the key is blank", async () => {
-    const { gf, calls } = client(() => list(0), { apiKey: "   " });
-    await gf.trending();
-    expect(calls[0]!.init.headers).toEqual({ Accept: "application/json" });
+  it.each([
+    ["no key", {}],
+    ["a blank key", { apiKey: "   " }],
+    ["a key of another service", { apiKey: "dc6zaTOxFJmzC" }],
+    ["a key one letter short", { apiKey: KEY.slice(0, -1) }],
+    ["a key with a stray character", { apiKey: `${KEY.slice(0, -1)}-` }],
+    ["a key that is not text", { apiKey: 12 }],
+    ["nothing", undefined],
+  ])("refuses %s before any request", (_, options) => {
+    const fetch = vi.fn();
+    expect(() => new OhmagifFetch({ fetch, ...(options as object) } as never)).toThrow(
+      new TypeError("apiKey must be an ohmagif key: omg_ and 32 letters or digits"),
+    );
+    expect(() => new OhmagifFetch(options as never)).toThrow(TypeError);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("tells an ohmagif key", () => {
+    expect(isApiKey(KEY)).toBe(true);
+    expect([` ${KEY}`, "omg_", "omga_0123456789abcdefghijABCDEFGHIJ", null, 1].map(isApiKey)).toEqual([false, false, false, false, false]);
   });
 
   it("uses the global fetch, called unbound", async () => {
@@ -80,7 +99,7 @@ describe("requests", () => {
       seen.push(this);
       return Promise.resolve(list(0));
     });
-    await new OhmagifFetch().trending();
+    await new OhmagifFetch(KEY).trending();
     expect(seen).toEqual([undefined]);
   });
 
@@ -93,17 +112,17 @@ describe("requests", () => {
   it.each(["ftp://ohmagif.com", "javascript:alert(1)", "ohmagif.com", "https://ohmagif.com/?x=1", "https://ohmagif.com/#x", "https://u:p@ohmagif.com"])(
     "refuses the site %s",
     (baseURL) => {
-      expect(() => new OhmagifFetch({ baseURL })).toThrow(TypeError);
+      expect(() => new OhmagifFetch({ apiKey: KEY, baseURL })).toThrow(TypeError);
     },
   );
 
   it("names the upload page of its site", () => {
-    expect(new OhmagifFetch().uploadURL).toBe("https://ohmagif.com/upload");
-    expect(new OhmagifFetch({ baseURL: "http://localhost:8080/" }).uploadURL).toBe("http://localhost:8080/upload");
+    expect(new OhmagifFetch(KEY).uploadURL).toBe("https://ohmagif.com/upload");
+    expect(new OhmagifFetch({ apiKey: KEY, baseURL: "http://localhost:8080/" }).uploadURL).toBe("http://localhost:8080/upload");
   });
 
   it("refuses a negative timeout", () => {
-    expect(() => new OhmagifFetch({ timeout: -1 })).toThrow(RangeError);
+    expect(() => new OhmagifFetch({ apiKey: KEY, timeout: -1 })).toThrow(RangeError);
   });
 });
 
@@ -218,13 +237,13 @@ describe("failures", () => {
   });
 
   it("says when there is no answer", async () => {
-    const gf = new OhmagifFetch({ fetch: () => Promise.reject(new TypeError("Failed to fetch")) });
+    const gf = new OhmagifFetch({ apiKey: KEY, fetch: () => Promise.reject(new TypeError("Failed to fetch")) });
     await expect(gf.trending()).rejects.toMatchObject({ status: 0, code: "network" });
   });
 
   it("gives up after the timeout", async () => {
     vi.useFakeTimers();
-    const gf = new OhmagifFetch({
+    const gf = new OhmagifFetch({ apiKey: KEY,
       timeout: 2000,
       fetch: (_, init) =>
         new Promise((_, reject) => init?.signal?.addEventListener("abort", () => reject(init.signal!.reason))),
@@ -236,13 +255,13 @@ describe("failures", () => {
 
   it("waits forever with a timeout of 0", async () => {
     const seen: (AbortSignal | null | undefined)[] = [];
-    const gf = new OhmagifFetch({ timeout: 0, fetch: async (_, init) => (seen.push(init?.signal), list(0)) });
+    const gf = new OhmagifFetch({ apiKey: KEY, timeout: 0, fetch: async (_, init) => (seen.push(init?.signal), list(0)) });
     await gf.trending();
     expect(seen).toEqual([null]);
   });
 
   it("says when there is no answer with a timeout of 0", async () => {
-    const gf = new OhmagifFetch({ timeout: 0, fetch: () => Promise.reject(new TypeError("Failed to fetch")) });
+    const gf = new OhmagifFetch({ apiKey: KEY, timeout: 0, fetch: () => Promise.reject(new TypeError("Failed to fetch")) });
     await expect(gf.trending()).rejects.toMatchObject({ code: "network" });
   });
 
@@ -250,13 +269,13 @@ describe("failures", () => {
     // Browsers from before abort reasons (Safari 15.3 and older) leave it out.
     const signal = { aborted: true, reason: undefined, addEventListener() {}, removeEventListener() {} } as unknown as AbortSignal;
     const failure = new DOMException("Aborted", "AbortError");
-    const gf = new OhmagifFetch({ fetch: () => Promise.reject(failure) });
+    const gf = new OhmagifFetch({ apiKey: KEY, fetch: () => Promise.reject(failure) });
     await expect(gf.trending({ signal })).rejects.toBe(failure);
   });
 
   it("rejects with the caller's reason when the caller aborts", async () => {
     const ctrl = new AbortController();
-    const gf = new OhmagifFetch({
+    const gf = new OhmagifFetch({ apiKey: KEY,
       fetch: (_, init) =>
         new Promise((_, reject) => init?.signal?.addEventListener("abort", () => reject(init.signal!.reason))),
     });
@@ -268,7 +287,7 @@ describe("failures", () => {
   it("rejects at once when the caller aborted already", async () => {
     const ctrl = new AbortController();
     ctrl.abort();
-    const gf = new OhmagifFetch({
+    const gf = new OhmagifFetch({ apiKey: KEY,
       fetch: (_, init) => (init?.signal?.aborted ? Promise.reject(init.signal.reason) : Promise.resolve(list(0))),
     });
     await expect(gf.trending({ signal: ctrl.signal })).rejects.toMatchObject({ name: "AbortError" });
@@ -276,7 +295,7 @@ describe("failures", () => {
 
   it("stops reading a body the caller aborted", async () => {
     const ctrl = new AbortController();
-    const gf = new OhmagifFetch({
+    const gf = new OhmagifFetch({ apiKey: KEY,
       fetch: async () =>
         Object.assign(new Response(null, { status: 200 }), {
           // The caller gives up while the body is on its way.

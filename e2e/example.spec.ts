@@ -2,6 +2,9 @@ import { test as base, expect, type Locator, type Page } from "@playwright/test"
 import { CREDIT_STRIP_HEIGHT } from "../src/index.js";
 
 const api = process.env.OHMAGIF_BASE_URL;
+// The key the example was started or built with.
+const key = process.env.OHMAGIF_API_KEY ?? "";
+if (!key) throw new Error("OHMAGIF_API_KEY is not set: the example's ohmagif API key");
 const site = api ?? "https://ohmagif.com";
 const start = api ? `./?base=${encodeURIComponent(api)}` : "./";
 
@@ -62,10 +65,11 @@ function expectStripHidden(found: { clipped: boolean; cut: number; strip: number
 }
 
 test("the picker shows trending GIFs, the credit strip cut off", async ({ page }) => {
-  const asked = page.waitForRequest((r) => new URL(r.url()).pathname.endsWith("/api/v1/trending"));
+  const asked = page.waitForRequest((r) => r.method() === "GET" && new URL(r.url()).pathname.endsWith("/api/v1/trending"));
   const picker = await openPicker(page);
-  // Nothing of the page goes with the request: no cookie, no address.
+  // The key goes with the request, nothing of the page: no cookie, no address.
   const headers = await (await asked).allHeaders();
+  expect(headers.authorization).toBe(`Bearer ${key}`);
   expect(headers.cookie).toBeUndefined();
   expect(headers.referer).toBeUndefined();
 
@@ -83,11 +87,9 @@ test("the picker shows trending GIFs, the credit strip cut off", async ({ page }
 
 test("scrolling the picker loads page after page, pictures only near the screen", async ({ page }) => {
   const offsets: number[] = [];
-  const preflights: string[] = [];
   page.on("request", (r) => {
     const url = new URL(r.url());
-    if (r.method() === "OPTIONS") preflights.push(r.url());
-    if (url.pathname.endsWith("/api/v1/trending")) offsets.push(Number(url.searchParams.get("offset")));
+    if (r.method() === "GET" && url.pathname.endsWith("/api/v1/trending")) offsets.push(Number(url.searchParams.get("offset")));
   });
   const picker = await openPicker(page);
   const scroller = picker.locator(".picker-scroll");
@@ -101,7 +103,6 @@ test("scrolling the picker loads page after page, pictures only near the screen"
     )
     .toBeGreaterThanOrEqual(4);
   expect(offsets.slice(0, 4)).toEqual([0, 12, 24, 36]);
-  expect(preflights).toEqual([]);
   const tiles = await picker.locator(".ohmagif-tile").count();
   expect(tiles).toBeGreaterThanOrEqual(36);
   expect(await picker.locator(".ohmagif-tile img").count()).toBeLessThan(tiles);
