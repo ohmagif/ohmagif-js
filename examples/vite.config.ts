@@ -1,5 +1,16 @@
 import { defineConfig, type Plugin } from "vite";
 
+// Comments go until none is left, so no "<!--" pieced together from the
+// remains of two others survives.
+function withoutComments(html: string): string {
+  let previous: string;
+  do {
+    previous = html;
+    html = html.replace(/<!--[\s\S]*?-->/g, "");
+  } while (html !== previous);
+  return html;
+}
+
 // The served HTML is minified like the bundle: comments and the whitespace
 // between tags go and the indented prose folds to single spaces, the sources
 // stay readable. The page has no <pre> and no inline script, whose
@@ -11,8 +22,7 @@ function minifyHtml(): Plugin {
     transformIndexHtml: {
       order: "post",
       handler: (html) =>
-        html
-          .replace(/<!--[\s\S]*?-->/g, "")
+        withoutComments(html)
           .replace(/\s+/g, " ")
           .replace(/> </g, "><")
           .trim(),
