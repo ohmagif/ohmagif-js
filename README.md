@@ -70,4 +70,5 @@ make example # OHMAGIF_API_KEY in .env
 
 ## Licence
 
-GPL-3.0
+MIT. The GIFs are not part of it: show each one with its creator's
+credit, as the [API terms](https://ohmagif.com/api) ask.
