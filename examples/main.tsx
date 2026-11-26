@@ -1,10 +1,12 @@
 import { StrictMode, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { frameSize, OhmagifError, OhmagifFetch, type Gif as GifData } from "../src/index.js";
+import { frameSize, isApiKey, OhmagifError, OhmagifFetch, type Gif as GifData } from "../src/index.js";
 import { Gif, gifSize, Grid } from "../src/react/index.js";
 
-const base = new URLSearchParams(location.search).get("base") ?? undefined;
-const gf = new OhmagifFetch({ baseURL: base });
+const params = new URLSearchParams(location.search);
+const base = params.get("base") ?? undefined;
+const key = params.get("key") ?? import.meta.env.OHMAGIF_API_KEY ?? "";
+let gf: OhmagifFetch;
 
 const PAGE_SIZE = 12;
 const SEARCH_DEBOUNCE_MS = 250;
@@ -132,8 +134,14 @@ function Chat() {
   );
 }
 
-createRoot(document.getElementById("app")!).render(
-  <StrictMode>
-    <Chat />
-  </StrictMode>,
-);
+const root = createRoot(document.getElementById("app")!);
+if (isApiKey(key)) {
+  gf = new OhmagifFetch({ apiKey: key, baseURL: base });
+  root.render(
+    <StrictMode>
+      <Chat />
+    </StrictMode>,
+  );
+} else {
+  root.render(<p className="status">No API key: set OHMAGIF_API_KEY, or ?key=</p>);
+}

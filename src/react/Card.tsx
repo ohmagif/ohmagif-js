@@ -55,7 +55,7 @@ const creditStyle: CSSProperties = {
   display: "block",
   height: CREDIT_LINE_HEIGHT,
   padding: "6px 10px",
-  fontSize: 14,
+  fontSize: 12,
   lineHeight: "16px",
   color: muted,
   whiteSpace: "nowrap",

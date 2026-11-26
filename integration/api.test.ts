@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { CREDIT_STRIP_HEIGHT, frameSize, OhmagifError, OhmagifFetch, tinyFrameSize, type Gif } from "../src/index.js";
 
 const baseURL = process.env.OHMAGIF_BASE_URL ?? "https://ohmagif.com";
+const apiKey = process.env.OHMAGIF_API_KEY ?? "";
+if (!apiKey) throw new Error("OHMAGIF_API_KEY is not set: an ohmagif API key");
 
 /**
  * A client that also keeps, for each list it was answered, how many GIFs the
@@ -11,6 +13,7 @@ function client() {
   const sent: number[] = [];
   const headers: Headers[] = [];
   const gf = new OhmagifFetch({
+    apiKey,
     baseURL,
     fetch: async (input, init) => {
       const res = await fetch(input, init);
@@ -94,6 +97,14 @@ describe("the live API", () => {
     const missing = await gf.gif("zzzzzzzzzz").catch((e: unknown) => e);
     expect(missing).toBeInstanceOf(OhmagifError);
     expect(missing).toMatchObject({ status: 404, code: "not_found" });
+  });
+
+  it("refuses a request without a key, and one with a key it does not know", async () => {
+    const bare = await fetch(`${baseURL}/api/v1/trending`);
+    expect(bare.status).toBe(401);
+    expect(await bare.json()).toMatchObject({ code: "key_required" });
+    const unknown = new OhmagifFetch({ apiKey: `omg_${"0".repeat(32)}`, baseURL });
+    await expect(unknown.trending()).rejects.toMatchObject({ status: 401, code: "invalid_key" });
   });
 
   it("serves the files it names", async () => {

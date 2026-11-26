@@ -21,6 +21,9 @@ function minifyHtml(): Plugin {
 }
 
 export default defineConfig({
+  // OHMAGIF_API_KEY from the environment, or from the repository's .env.
+  envDir: "..",
+  envPrefix: "OHMAGIF_",
   // Addresses relative to the page: the build is served from any path, a
   // pull request's preview under pr-preview/pr-<n>/ included.
   base: "./",

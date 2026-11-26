@@ -14,10 +14,14 @@ npm install @ohmagif/js
 
 ## Client
 
+Every request needs an API key. Make one at
+[ohmagif.com/account/keys](https://ohmagif.com/account/keys) and list the
+sites it is for: other web pages are refused, apps and servers are not.
+
 ```ts
 import { OhmagifFetch } from "@ohmagif/js";
 
-const gf = new OhmagifFetch();
+const gf = new OhmagifFetch("omg_...");
 
 await gf.search("side eye", { limit: 12, rating: "pg" });
 await gf.trending({ offset: 12 });
@@ -61,7 +65,7 @@ connect-src https://ohmagif.com;
 ```sh
 make install
 make test
-make example
+make example # OHMAGIF_API_KEY in .env
 ```
 
 ## Licence

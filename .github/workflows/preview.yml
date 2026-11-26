@@ -21,6 +21,8 @@ jobs:
   build:
     if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    env:
+      OHMAGIF_API_KEY: ${{ secrets.OHMAGIF_API_KEY }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

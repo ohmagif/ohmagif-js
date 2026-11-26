@@ -1,16 +1,17 @@
-// A client for the public read endpoints of the ohmagif API (/api/v1). They
-// need no key and answer pages on any site.
+// A client for the public read endpoints of the ohmagif API (/api/v1). Every
+// request carries an API key; the endpoints answer pages on any site the key
+// allows.
 
 import { asObject, DEFAULT_BASE_URL, isGifId, parseGif, RATINGS, type Gif, type Rating } from "./gif.js";
 
 export interface OhmagifFetchOptions {
   /**
-   * An integrator key (omg_...). Optional: without one the API allows 60
-   * requests a minute per address, with one 600 a minute for the key. A key
-   * sent from a browser can be read by anyone using the page, and its
-   * answers are never cached.
+   * Your API key, omg_ and 32 letters or digits, from
+   * https://ohmagif.com/account/keys. Anyone using a page can read a key
+   * sent from it: list the sites the key is for there, and other web pages
+   * are refused.
    */
-  apiKey?: string;
+  apiKey: string;
   /** The site, https://ohmagif.com by default. */
   baseURL?: string;
   /** Milliseconds to wait for an answer, 10000 by default; 0 waits forever. */
@@ -67,8 +68,9 @@ export interface ReactionsResult {
 
 /**
  * A request the API refused or did not answer. `code` is the API's own
- * (not_found, removed, search_unavailable, ...) or one of: invalid_id (no
- * request was sent), network, timeout, invalid_response.
+ * (key_required, invalid_key, site_not_allowed, not_found, removed,
+ * rate_limited, ...) or one of: invalid_id (no request was sent), network,
+ * timeout, invalid_response.
  */
 export class OhmagifError extends Error {
   readonly status: number;
@@ -83,6 +85,13 @@ export class OhmagifError extends Error {
     this.code = code;
     this.retryAfter = retryAfter;
   }
+}
+
+const API_KEY = /^omg_[0-9A-Za-z]{32}$/;
+
+/** Whether value is an ohmagif API key: omg_ and 32 letters or digits. */
+export function isApiKey(value: unknown): value is string {
+  return typeof value === "string" && API_KEY.test(value);
 }
 
 const MAX_LIMIT = 50;
@@ -168,10 +177,12 @@ export class OhmagifFetch {
   readonly #fetch: typeof globalThis.fetch;
 
   /** Takes the options, or an API key alone. */
-  constructor(options: OhmagifFetchOptions | string = {}) {
-    const o = typeof options === "string" ? { apiKey: options } : options;
+  constructor(options: OhmagifFetchOptions | string) {
+    const o: Partial<OhmagifFetchOptions> = typeof options === "string" ? { apiKey: options } : (options ?? {});
+    const key = typeof o.apiKey === "string" ? o.apiKey.trim() : "";
+    if (!isApiKey(key)) throw new TypeError("apiKey must be an ohmagif key: omg_ and 32 letters or digits");
+    this.#key = key;
     this.#base = baseURL(o.baseURL ?? DEFAULT_BASE_URL);
-    this.#key = (o.apiKey ?? "").trim();
     this.#timeout = o.timeout ?? 10_000;
     if (!Number.isFinite(this.#timeout) || this.#timeout < 0) throw new RangeError("timeout must be 0 or more");
     // Called unbound: a fetch kept as a method throws "Illegal invocation"
@@ -254,8 +265,7 @@ export class OhmagifFetch {
   async #get(path: string, params: Record<string, string>, signal?: AbortSignal) {
     const url = new URL(`${this.#base}/api/v1${path}`);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-    const headers: Record<string, string> = { Accept: "application/json" };
-    if (this.#key) headers.Authorization = `Bearer ${this.#key}`;
+    const headers = { Accept: "application/json", Authorization: `Bearer ${this.#key}` };
     const d = deadline(signal, this.#timeout);
     let res: Response;
     let body: unknown;
