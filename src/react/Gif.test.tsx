@@ -32,7 +32,7 @@ describe("Gif", () => {
     // full.avif is 640 x 424, of which the bottom 24 px are the strip.
     expect(frame(container).style.aspectRatio).toBe("640 / 400");
     expect(frame(container).style.overflow).toBe("hidden");
-    expect([credit(container).style.height, credit(container).style.padding, credit(container).style.fontSize]).toEqual(["28px", "6px 10px", "14px"]);
+    expect([credit(container).style.height, credit(container).style.padding, credit(container).style.fontSize]).toEqual(["28px", "6px 10px", "12px"]);
     expect(credit(container).style.whiteSpace).toBe("nowrap");
     expect(credit(container).style.textOverflow).toBe("ellipsis");
   });

@@ -144,6 +144,7 @@ test("a picked GIF is sent, and keeps the room it was given while it loads", asy
   await expect(card).toHaveAttribute("href", new RegExp(`^${site}/g/[^/]*${id}$`));
   await expect(card).toHaveAttribute("target", "_blank");
   await expect(card.locator(".ohmagif-credit")).toHaveText(/^(GIF by )?@\S+ on ohmagif\.com$/);
+  await expect(card.locator(".ohmagif-credit")).toHaveCSS("font-size", "12px");
 });
 
 test("draws the card in the embed's colours, light or dark", async ({ page }) => {
