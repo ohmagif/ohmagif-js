@@ -1,0 +1,23 @@
+<!doctype html>
+<!--
+  A chat composer with a GIF picker, the way a chat app uses this package:
+  the picker searches ohmagif and a picked GIF is sent as a message that
+  holds only its id; each message asks the API for the GIF when it shows.
+  `make example` serves it on http://localhost:8082/. ?base= points it at
+  another ohmagif, e.g. ?base=http://localhost:8080 for a local stack.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://i.ohmagif.com http://localhost:8080; connect-src 'self' ws: https://ohmagif.com http://localhost:8080">
+<title>Chat - ohmagif example</title>
+<link rel="icon" href="./favicon.ico" sizes="32x32">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main id="app"></main>
+<script type="module" src="./main.tsx"></script>
+</body>
+</html>

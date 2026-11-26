@@ -1,0 +1,19 @@
+.DS_Store
+/.idea/
+/.env
+/.playwright-mcp/
+
+# Build output
+/dist/
+/node_modules/
+/coverage/
+/examples/dist/
+/test-results/
+/playwright-report/
+/*.tgz
+
+# Local notes and agent files, never committed
+/docs/
+CLAUDE.md
+CLAUDE.local.md
+/.claude/settings.local.json

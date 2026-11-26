@@ -1,0 +1,58 @@
+name: preview
+
+# Each pull request's example on GitHub Pages, at
+# https://ohmagif.github.io/ohmagif-js/pr-preview/pr-<n>/, linked in a comment
+# on the pull request and taken down when it closes. A pull request from a
+# fork gets none: its token cannot write to the repository.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+permissions:
+  contents: read
+
+# A newer push replaces the preview on its way; closing takes it down.
+concurrency:
+  group: preview-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  # The pull request's code runs here, without the right to push.
+  build:
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.1'
+      - run: make install
+      - run: make example-build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: example
+          path: examples/dist
+          if-no-files-found: error
+
+  # Puts the built files on gh-pages and comments the link, or takes them
+  # off when the pull request closes.
+  deploy:
+    needs: build
+    if: ${{ !cancelled() && needs.build.result != 'failure' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - if: github.event.action != 'closed'
+        uses: actions/download-artifact@v8
+        with:
+          name: example
+          path: examples/dist
+      - uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: examples/dist
+          qr-code: false
+          deploy-commit-message: Preview of pull request ${{ github.event.number }}
+          remove-commit-message: Remove the preview of pull request ${{ github.event.number }}
