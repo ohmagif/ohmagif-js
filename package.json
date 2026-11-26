@@ -1,6 +1,6 @@
 {
   "name": "@ohmagif/js",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Client for the ohmagif.com API and a React GIF grid, without dependencies",
   "license": "GPL-3.0-only",
   "repository": {

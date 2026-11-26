@@ -38,10 +38,10 @@ describe("masonry", () => {
     expect(masonry([tall(1, 320)], 300, Number.NaN, 0).boxes[0]!.width).toBe(300);
   });
 
-  it("makes room for the card and its credit line", () => {
+  it("makes room for the card and the tile's short credit line", () => {
     // 157 px wide: a frame of 155 inside the border, 155 high for a square,
-    // then the 28 px line and the border above and below.
-    expect(masonry([tall(1, 320)], 320, 2, 6).boxes[0]).toEqual({ x: 0, y: 0, width: 157, height: 185 });
+    // then the 18 px line and the border above and below.
+    expect(masonry([tall(1, 320)], 320, 2, 6).boxes[0]).toEqual({ x: 0, y: 0, width: 157, height: 175 });
   });
 });
 

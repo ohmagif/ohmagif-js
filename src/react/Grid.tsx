@@ -111,6 +111,7 @@ const Tile = memo(function Tile({ gif, x, y, w, h, near, link, hideAttribution, 
       link={link}
       onClick={(e) => onClick(gif, e)}
       hideAttribution={hideAttribution}
+      shortCredit
       className="ohmagif-tile"
       style={{ position: "absolute", left: x, top: y, width: w, height: h }}
     />
