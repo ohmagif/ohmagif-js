@@ -8,8 +8,7 @@ export function gifId(n: number): string {
 
 /** A GIF as the API answers it, shaped like a real answer. */
 export function apiGif(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
-  const rev = "e130eaf5";
-  const media = `https://i.ohmagif.com/g/${id}/${rev}`;
+  const media = `https://i.ohmagif.com/g/${id}`;
   return {
     id,
     title: `Title ${id}`,

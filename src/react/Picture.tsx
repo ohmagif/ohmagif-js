@@ -9,7 +9,7 @@ const pictureStyle: CSSProperties = { display: "contents" };
 const imgStyle: CSSProperties = { display: "block", width: "100%", height: "auto" };
 
 export interface PictureProps {
-  gif: Gif;
+  files: Gif["files"];
   /** The width the frame is shown at, in CSS pixels. */
   width: number;
   /** tiny.avif whatever the width and density, as a grid shows it. */
@@ -26,8 +26,8 @@ export interface PictureProps {
  * tinyOnly. The width and height attributes are the size the file is shown
  * at, so the page knows it before a byte arrives.
  */
-export function Picture({ gif, width, tinyOnly = false, alt, lazy = false, onLoad, onError }: PictureProps) {
-  const { full, tiny, poster } = gif.files;
+export function Picture({ files, width, tinyOnly = false, alt, lazy = false, onLoad, onError }: PictureProps) {
+  const { full, tiny, poster } = files;
   const both = !tinyOnly && full.width > tiny.width;
   const srcSet = both ? `${tiny.url} ${tiny.width}w, ${full.url} ${full.width}w` : tinyOnly ? tiny.url : full.url;
   const file = tinyOnly ? tiny : full;

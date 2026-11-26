@@ -375,15 +375,15 @@ describe("Grid tiles", () => {
     }
   });
 
-  it("shows the frame alone with hideAttribution", async () => {
+  it("shows the whole file with hideAttribution, its credit strip showing", async () => {
     FakeIO.visible = () => true;
     const { container } = render(<Grid fetchGifs={server(1, 10)} width={320} columns={2} hideAttribution noLink />);
     await flush();
     const tile = tiles(container)[0]!;
     expect(tile.tagName).toBe("BUTTON");
     expect(tile.className).toBe("ohmagif-tile ohmagif-frame");
-    // No card: the whole column is the frame, 157 * 200 / 320 high.
-    expect([tile.style.width, tile.style.height]).toEqual(["157px", "98.125px"]);
+    // No card: the whole column is tiny.avif, strip included, 157 * 224 / 320 high.
+    expect([tile.style.width, tile.style.height]).toEqual(["157px", "109.9px"]);
     expect(tile.querySelector("img")).not.toBeNull();
     expect(container.querySelector(".ohmagif-credit")).toBeNull();
   });
@@ -410,8 +410,8 @@ describe("Grid tiles", () => {
     const pictured = () => tiles(container).filter((t) => t.querySelector("img")).map((t) => t.dataset.ohmagifId);
     expect(pictured()).toEqual([gifId(1)]);
     const tile = tiles(container)[0]!;
-    expect(tile.querySelector("source")!.getAttribute("srcset")).toBe("https://i.ohmagif.com/g/g000000001/e130eaf5/tiny.avif");
-    expect(tile.querySelector("img")!.getAttribute("src")).toBe("https://i.ohmagif.com/g/g000000001/e130eaf5/poster.jpg");
+    expect(tile.querySelector("source")!.getAttribute("srcset")).toBe("https://i.ohmagif.com/g/g000000001/tiny.avif");
+    expect(tile.querySelector("img")!.getAttribute("src")).toBe("https://i.ohmagif.com/g/g000000001/poster.jpg");
     shown = new Set([gifId(2), gifId(3)]);
     await FakeIO.refresh();
     expect(pictured()).toEqual([gifId(2), gifId(3)]);

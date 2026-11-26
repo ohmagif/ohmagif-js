@@ -19,7 +19,7 @@ test: ## vitest, gated at 100% coverage
 	npx vitest run --coverage
 
 .PHONY: test-integration
-test-integration: ## The client against the live API, with OHMAGIF_API_KEY (OHMAGIF_BASE_URL for another ohmagif)
+test-integration: ## The client against the live API, with OHMAGIF_API_KEY (OHMAGIF_BASE_URL and OHMAGIF_MEDIA_URL for another ohmagif)
 	npx vitest run --config vitest.integration.config.ts
 
 .PHONY: build
@@ -27,7 +27,7 @@ build: ## Build dist/
 	npm run build
 
 .PHONY: example
-example: ## A chat with a GIF picker on http://localhost:8082/, with OHMAGIF_API_KEY (?base= for another ohmagif)
+example: ## A chat with a GIF picker on http://localhost:8082/, with OHMAGIF_API_KEY (?base= and ?media= for another ohmagif)
 	npm run example
 
 .PHONY: example-build

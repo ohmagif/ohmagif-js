@@ -2,7 +2,7 @@
 // request carries an API key; the endpoints answer pages on any site the key
 // allows.
 
-import { asObject, DEFAULT_BASE_URL, isGifId, parseGif, RATINGS, type Gif, type Rating } from "./gif.js";
+import { asObject, DEFAULT_BASE_URL, isGifId, parseGif, RATINGS, siteURL, type Gif, type Rating } from "./gif.js";
 
 export interface OhmagifFetchOptions {
   /**
@@ -98,21 +98,6 @@ const MAX_LIMIT = 50;
 const MAX_OFFSET = 1000;
 const TAG_SLUG = /^[a-z0-9-]{1,80}$/;
 
-function baseURL(raw: string): string {
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new TypeError(`baseURL is not an address: ${raw}`);
-  }
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
-    throw new TypeError(`baseURL must be http or https: ${raw}`);
-  }
-  if (url.search || url.hash || url.username || url.password) {
-    throw new TypeError(`baseURL takes no query, fragment or credentials: ${raw}`);
-  }
-  return url.href.replace(/\/+$/, "");
-}
 
 function pageParams(options: PageOptions): Record<string, string> {
   const { offset = 0, limit = 25, rating } = options;
@@ -182,7 +167,7 @@ export class OhmagifFetch {
     const key = typeof o.apiKey === "string" ? o.apiKey.trim() : "";
     if (!isApiKey(key)) throw new TypeError("apiKey must be an ohmagif key: omg_ and 32 letters or digits");
     this.#key = key;
-    this.#base = baseURL(o.baseURL ?? DEFAULT_BASE_URL);
+    this.#base = siteURL(o.baseURL ?? DEFAULT_BASE_URL, "baseURL");
     this.#timeout = o.timeout ?? 10_000;
     if (!Number.isFinite(this.#timeout) || this.#timeout < 0) throw new RangeError("timeout must be 0 or more");
     // Called unbound: a fetch kept as a method throws "Illegal invocation"

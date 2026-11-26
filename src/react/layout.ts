@@ -13,7 +13,10 @@ export interface Size {
 }
 
 export interface SizeOptions {
-  /** The frame alone, without the card and its credit line. */
+  /**
+   * The whole file, its credit strip showing, without the card and its
+   * credit line. gifSize then takes the file's size, not the frame's.
+   */
   hideAttribution?: boolean;
 }
 
@@ -55,8 +58,10 @@ export function masonry(gifs: readonly Gif[], width: number, columns: number, gu
   const boxes: Box[] = gifs.map((gif) => {
     let c = 0;
     for (let i = 1; i < cols; i++) if (heights[i]! < heights[c]!) c = i;
-    // Grids show tiny.avif, so its frame is the tile's shape.
-    const { height } = cardSize(tinyFrameSize(gif), colWidth, TILE_CREDIT_LINE_HEIGHT, options);
+    // Grids show tiny.avif, so its frame, or the whole file without the
+    // card, is the tile's shape.
+    const shape = options.hideAttribution ? gif.files.tiny : tinyFrameSize(gif);
+    const { height } = cardSize(shape, colWidth, TILE_CREDIT_LINE_HEIGHT, options);
     const box = { x: c * (colWidth + gap), y: heights[c]!, width: colWidth, height };
     heights[c] = box.y + box.height + gap;
     return box;

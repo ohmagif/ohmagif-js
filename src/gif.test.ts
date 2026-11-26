@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { frameHeight, frameSize, gifLabel, httpURL, isGifId, parseGif, tinyFrameSize } from "./gif.js";
+import { fileURL, frameHeight, frameSize, gifLabel, gifURL, httpURL, isGifId, parseGif, tinyFrameSize } from "./gif.js";
 import { apiGif, gif } from "./test/fixtures.js";
 
 describe("isGifId", () => {
@@ -8,6 +8,29 @@ describe("isGifId", () => {
     for (const bad of ["", "eTxuLnWv7", "eTxuLnWv7C1", "../gifs/xy", "eTxuLnWv7%", "eTxuLn-v7C", "eTxuLnWv7\n", 42, null]) {
       expect(isGifId(bad), String(bad)).toBe(false);
     }
+  });
+});
+
+describe("fileURL and gifURL", () => {
+  it("build a GIF's file and page from its id", () => {
+    expect(fileURL("eTxuLnWv7C", "full")).toBe("https://i.ohmagif.com/g/eTxuLnWv7C/full.avif");
+    expect(fileURL("eTxuLnWv7C", "tiny")).toBe("https://i.ohmagif.com/g/eTxuLnWv7C/tiny.avif");
+    expect(fileURL("eTxuLnWv7C", "poster", "http://localhost:8080/media/")).toBe("http://localhost:8080/media/g/eTxuLnWv7C/poster.jpg");
+    expect(gifURL("eTxuLnWv7C")).toBe("https://ohmagif.com/g/eTxuLnWv7C");
+    expect(gifURL("eTxuLnWv7C", "http://localhost:8080")).toBe("http://localhost:8080/g/eTxuLnWv7C");
+  });
+
+  it("give nothing for an id that is not one", () => {
+    for (const bad of ["", "../gifs/xy", "eTxuLnWv7%", 42, null]) {
+      expect(fileURL(bad, "full"), String(bad)).toBeNull();
+      expect(gifURL(bad), String(bad)).toBeNull();
+    }
+  });
+
+  it("refuse a site that is not a plain http or https address", () => {
+    expect(() => fileURL("eTxuLnWv7C", "full", "javascript:alert(1)")).toThrow("mediaURL must be http or https");
+    expect(() => fileURL("eTxuLnWv7C", "full", "i.ohmagif.com")).toThrow("mediaURL is not an address");
+    expect(() => gifURL("eTxuLnWv7C", "https://ohmagif.com/?x=1")).toThrow("baseURL takes no query, fragment or credentials");
   });
 });
 
@@ -36,7 +59,7 @@ describe("parseGif", () => {
       reaction: "oops",
       creator: { handle: "mira", name: "Mira Rautio" },
     });
-    expect(g?.files.tiny).toEqual({ url: "https://i.ohmagif.com/g/eTxuLnWv7C/e130eaf5/tiny.avif", type: "image/avif", width: 320, height: 224, bytes: 22771 });
+    expect(g?.files.tiny).toEqual({ url: "https://i.ohmagif.com/g/eTxuLnWv7C/tiny.avif", type: "image/avif", width: 320, height: 224, bytes: 22771 });
   });
 
   it("keeps only the fields it knows", () => {

@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/ohmagif/ohmagif-js.svg)](LICENSE)
 
 A client for the [ohmagif](https://ohmagif.com) API and a React GIF picker.
-No dependencies, 5.7 kB gzipped. [Example](https://ohmagif.github.io/ohmagif-js/)
+No dependencies, 6.3 kB gzipped. [Example](https://ohmagif.github.io/ohmagif-js/)
 
 ```sh
 npm install @ohmagif/js
@@ -30,28 +30,36 @@ await gf.gif("eTxuLnWv7C");
 await gf.reactions();
 ```
 
+A file's address never changes and needs no key:
+`fileURL("eTxuLnWv7C", "full")` is
+`https://i.ohmagif.com/g/eTxuLnWv7C/full.avif`.
+
 ## React
 
 React 18 or 19.
 
 ```tsx
-import { frameSize } from "@ohmagif/js";
-import { Gif, gifSize, Grid } from "@ohmagif/js/react";
+import { gifLabel } from "@ohmagif/js";
+import { Gif, GifFromId, Grid } from "@ohmagif/js/react";
 
 <Grid
   fetchGifs={(offset, signal) => gf.trending({ offset, limit: 12, signal })}
   width={336}
   columns={2}
   noLink
-  onGifClick={(gif) => send({ id: gif.id, ...frameSize(gif) })}
+  onGifClick={(gif) => send({ id: gif.id, width: gif.width, height: gif.height, alt: gifLabel(gif) })}
 />
+
+<GifFromId id={m.id} size={{ width: m.width, height: m.height }} alt={m.alt} width={320} />
 
 <Gif gif={gif} width={322} />
 ```
 
-Keep a GIF's id and `frameSize(gif)`, not its file address.
-`gifSize(frame, width)` is the room it takes before it loads. Colours follow
-the page's `color-scheme`.
+`GifFromId` draws a GIF from what a message keeps, without a request: the
+whole file, its credit strip included, links to the GIF's page. `Gif` shows
+a GIF from the API in the embed's card, its credit line under the frame.
+`gifSize` is the room either takes before it loads. Colours follow the
+page's `color-scheme`.
 
 ## Content-Security-Policy
 
