@@ -6,7 +6,8 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json-summary"],
+      // text for the log, json-summary for the run page, lcov for Coveralls.
+      reporter: ["text", "json-summary", "lcov"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/**/*.test.*", "src/test/**"],
       // Every statement, branch, function and line: what no test reaches is

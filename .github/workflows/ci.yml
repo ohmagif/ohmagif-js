@@ -38,6 +38,14 @@ jobs:
       - name: Coverage summary
         if: always()
         run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+      # Coveralls hosts the coverage history and comments on pull requests. Runs even when tests
+      # failed, so a coverage drop is still visible.
+      - name: Upload coverage to Coveralls
+        if: always()
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coverage/lcov.info
+          format: lcov
 
   # The client against the live API: its answers still have the shape the
   # package reads.
@@ -118,11 +126,7 @@ jobs:
           node-version: '26.13.1'
           registry-url: https://registry.npmjs.org
       - run: make install
-      - name: Tag and package.json agree
-        run: |
-          version="$(node -p 'require("./package.json").version')"
-          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
-            echo "Tag $GITHUB_REF_NAME, package.json $version"
-            exit 1
-          fi
+      # The tag is the version: v1.2.0 publishes 1.2.0. A tag that is not a
+      # version stops here.
+      - run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
       - run: make publish

@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # All npm bumps arrive as a single grouped weekly PR. A pin moves only when
+  # the new release falls outside it, so the React peer range stays as wide
+  # as it is.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    versioning-strategy: increase-if-necessary
+    groups:
+      npm:
+        patterns: ["*"]
+
+  # All GitHub Actions bumps arrive as a single grouped weekly PR.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]

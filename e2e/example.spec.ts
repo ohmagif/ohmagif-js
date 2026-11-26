@@ -70,6 +70,9 @@ test("the picker shows trending GIFs, the credit strip cut off", async ({ page }
   expect(headers.referer).toBeUndefined();
 
   const tiles = picker.locator(".ohmagif-tile");
+  const credit = tiles.first().locator(".ohmagif-credit");
+  await expect(credit).toHaveText(/^by @\S+$/);
+  await expect(credit).toHaveCSS("font-size", "10px");
   await expect.poll(async () => (await cuts(tiles)).length).toBeGreaterThanOrEqual(4);
   expectStripHidden(await cuts(tiles));
   for (const img of await tiles.locator("img").all()) {

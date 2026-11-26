@@ -319,10 +319,10 @@ describe("Grid tiles", () => {
     const [a, b, c] = tiles(container);
     // Columns of 157 px. tiny.avif is 320 x 224, a frame of 320 x 200 over
     // the 24 px strip: 155 px inside the border, 96.875 high, then the
-    // 28 px credit line and the border.
-    expect([a!.style.left, a!.style.top, a!.style.width, a!.style.height]).toEqual(["0px", "0px", "157px", "126.875px"]);
+    // 18 px credit line and the border.
+    expect([a!.style.left, a!.style.top, a!.style.width, a!.style.height]).toEqual(["0px", "0px", "157px", "116.875px"]);
     expect([b!.style.left, b!.style.top]).toEqual(["163px", "0px"]);
-    expect([c!.style.left, c!.style.top]).toEqual(["0px", "132.875px"]);
+    expect([c!.style.left, c!.style.top]).toEqual(["0px", "122.875px"]);
     expect(a!.querySelector<HTMLElement>(".ohmagif-frame")!.style.aspectRatio).toBe("320 / 200");
     const img = a!.querySelector("img")!;
     expect([img.getAttribute("width"), img.getAttribute("height")]).toEqual(["155", "109"]);
@@ -357,15 +357,22 @@ describe("Grid tiles", () => {
     expect(a.querySelector(".ohmagif-credit")!.tagName).toBe("SPAN");
   });
 
-  it("puts the credit line under each tile, shorter in a narrow column", async () => {
+  it("puts a short credit line under each tile, at any width", async () => {
     FakeIO.visible = () => true;
-    const { container } = render(<Grid fetchGifs={server(1, 10)} width={320} columns={2} />);
-    await flush();
-    expect(container.querySelector(".ohmagif-credit")!.textContent).toBe("@mira on ohmagif.com");
-    cleanup();
-    const wide = render(<Grid fetchGifs={server(1, 10)} width={600} columns={2} />);
-    await flush();
-    expect(wide.container.querySelector(".ohmagif-credit")!.textContent).toBe("GIF by @mira on ohmagif.com");
+    for (const width of [320, 600]) {
+      const { container } = render(<Grid fetchGifs={server(1, 10)} width={width} columns={2} />);
+      await flush();
+      const credit = container.querySelector<HTMLElement>(".ohmagif-credit")!;
+      expect(credit.textContent).toBe("by @mira");
+      expect(credit.querySelector("span")!.textContent).toBe("@mira");
+      expect([credit.style.height, credit.style.padding, credit.style.fontSize, credit.style.lineHeight]).toEqual([
+        "18px",
+        "3px 6px",
+        "10px",
+        "12px",
+      ]);
+      cleanup();
+    }
   });
 
   it("shows the frame alone with hideAttribution", async () => {

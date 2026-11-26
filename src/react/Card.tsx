@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { frameSize, gifLabel, tinyFrameSize, type Gif } from "../gif.js";
-import { CARD_BORDER, CREDIT_LINE_HEIGHT } from "./layout.js";
+import { CARD_BORDER, CREDIT_LINE_HEIGHT, TILE_CREDIT_LINE_HEIGHT } from "./layout.js";
 import { Picture } from "./Picture.js";
 
 // The card is the one ohmagif's embed draws (templates/embed.html): the
@@ -66,6 +66,15 @@ const creditStyle: CSSProperties = {
   outlineOffset: -2,
 };
 
+/** A grid tile's credit line: "by @handle", small. */
+const shortCreditStyle: CSSProperties = {
+  ...creditStyle,
+  height: TILE_CREDIT_LINE_HEIGHT,
+  padding: "3px 6px",
+  fontSize: 10,
+  lineHeight: "12px",
+};
+
 const handleStyle: CSSProperties = { color: link, fontWeight: 600 };
 
 /** A control at the end of a grid: Retry, or Upload to ohmagif. */
@@ -106,6 +115,8 @@ export interface CardProps {
   onClick?: (e: MouseEvent<HTMLElement>) => void;
   /** Leave out the card and its credit line: the frame alone. */
   hideAttribution?: boolean;
+  /** The grid's shorter credit line, "by @handle". */
+  shortCredit?: boolean;
   lazy?: boolean;
   onLoad?: () => void;
   onError?: () => void;
@@ -124,6 +135,7 @@ export function Card({
   link,
   onClick,
   hideAttribution = false,
+  shortCredit = false,
   lazy,
   onLoad,
   onError,
@@ -167,8 +179,14 @@ export function Card({
   }
 
   const handle = <span style={handleStyle}>@{gif.creator.handle}</span>;
-  const words: ReactNode =
-    width >= FULL_CREDIT_WIDTH ? <>GIF by {handle} on ohmagif.com</> : <>{handle} on ohmagif.com</>;
+  const words: ReactNode = shortCredit ? (
+    <>by {handle}</>
+  ) : width >= FULL_CREDIT_WIDTH ? (
+    <>GIF by {handle} on ohmagif.com</>
+  ) : (
+    <>{handle} on ohmagif.com</>
+  );
+  const credit = shortCredit ? shortCreditStyle : creditStyle;
   const cls = `${className} ohmagif-card`;
   const s = { ...cardStyle, ...style };
 
@@ -179,7 +197,7 @@ export function Card({
         <span role="img" aria-label={label} className="ohmagif-frame" style={shape}>
           {pic}
         </span>
-        <span className="ohmagif-credit" style={creditStyle}>
+        <span className="ohmagif-credit" style={credit}>
           {words}
         </span>
       </a>
@@ -199,7 +217,7 @@ export function Card({
           {pic}
         </span>
       )}
-      <a {...external} className="ohmagif-credit" href={gif.url} style={creditStyle}>
+      <a {...external} className="ohmagif-credit" href={gif.url} style={credit}>
         {words}
       </a>
     </span>
