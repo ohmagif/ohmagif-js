@@ -1,0 +1,39 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --ink: #1d1b18;
+  --muted: #6b6760;
+  --rule: #e2ded6;
+  --accent: #2f5bea;
+  --ohmagif-placeholder: #efece6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161513;
+    --ink: #ece8e1;
+    --muted: #9a958c;
+    --rule: #34312c;
+    --accent: #8aa6ff;
+    --ohmagif-placeholder: #24221f;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 24px 16px 480px; }
+h1 { margin: 0 0 16px; font-size: 24px; }
+button { cursor: pointer; font: inherit; height: 36px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--ink); }
+
+.messages { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 12px; }
+.messages li { display: grid; gap: 4px; justify-items: start; }
+.messages code { font-size: 14px; color: var(--muted); }
+.placeholder { display: inline-flex; align-items: center; justify-content: center; max-width: 100%; border-radius: 6px; background: var(--ohmagif-placeholder); color: var(--muted); font-size: 14px; }
+
+.composer { position: relative; }
+.picker { position: absolute; top: 44px; left: 0; z-index: 1; display: flex; flex-direction: column; gap: 8px; width: 354px; max-width: calc(100vw - 32px); height: 460px; padding: 8px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); box-shadow: 0 6px 24px rgb(0 0 0 / 0.15); }
+.picker input { font: inherit; height: 36px; padding: 0 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--ink); }
+.picker input:focus { outline: none; border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.picker-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.status { margin: 12px 0; text-align: center; font-size: 14px; color: var(--muted); }
+.ohmagif-frame:focus-visible, .ohmagif-credit:focus-visible, .ohmagif-card:focus-visible { outline: 2px solid var(--accent); }
