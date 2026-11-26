@@ -41,7 +41,8 @@ describe("parseGif", () => {
 
   it("keeps only the fields it knows", () => {
     const text = JSON.stringify(apiGif("eTxuLnWv7C", { extra: "<script>", creator: { handle: "mira", url: "https://ohmagif.com/@mira", email: "x" } }));
-    const g = parseGif(JSON.parse(text.replace("{", '{"__proto__":{"polluted":true},')));
+    // A "__proto__" key first in the answer's own object.
+    const g = parseGif(JSON.parse(`{"__proto__":{"polluted":true},${text.slice(1)}`));
     expect(g).not.toHaveProperty("extra");
     expect(Object.getPrototypeOf(g)).toBe(Object.prototype);
     expect(g?.creator).toEqual({ handle: "mira", name: "mira", url: "https://ohmagif.com/@mira" });
