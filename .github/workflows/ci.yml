@@ -38,6 +38,14 @@ jobs:
       - name: Coverage summary
         if: always()
         run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+      # Coveralls hosts the coverage history and comments on pull requests. Runs even when tests
+      # failed, so a coverage drop is still visible.
+      - name: Upload coverage to Coveralls
+        if: always()
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coverage/lcov.info
+          format: lcov
 
   # The client against the live API: its answers still have the shape the
   # package reads.

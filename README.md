@@ -1,5 +1,10 @@
 # @ohmagif/js
 
+[![CI](https://github.com/ohmagif/ohmagif-js/actions/workflows/ci.yml/badge.svg)](https://github.com/ohmagif/ohmagif-js/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/ohmagif/ohmagif-js/badge.svg?branch=main)](https://coveralls.io/github/ohmagif/ohmagif-js?branch=main)
+[![npm: @ohmagif/js](https://img.shields.io/npm/v/@ohmagif/js?label=%40ohmagif%2Fjs&logo=npm)](https://www.npmjs.com/package/@ohmagif/js)
+[![License](https://img.shields.io/github/license/ohmagif/ohmagif-js.svg)](LICENSE)
+
 A client for the [ohmagif](https://ohmagif.com) API and a React GIF picker.
 No dependencies, 5.7 kB gzipped. [Example](https://ohmagif.github.io/ohmagif-js/)
 
