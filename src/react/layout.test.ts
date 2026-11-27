@@ -9,10 +9,16 @@ function tall(n: number, h: number) {
   return { ...g, files: { ...g.files, ...files } };
 }
 
+/** A GIF whose tiny file is 320 wide and `h` high, its credit strip included. */
+function whole(n: number, h: number) {
+  return tall(n, h - 24);
+}
+
 describe("masonry", () => {
   it("puts each GIF into the shortest column", () => {
     // Two columns of 157 px: (320 - 6) / 2.
-    const { boxes, height } = masonry([tall(1, 640), tall(2, 320), tall(3, 320), tall(4, 320)], 320, 2, 6, { hideAttribution: true });
+    // Without the card a tile is the whole file, its strip included.
+    const { boxes, height } = masonry([whole(1, 640), whole(2, 320), whole(3, 320), whole(4, 320)], 320, 2, 6, { hideAttribution: true });
     expect(boxes).toEqual([
       { x: 0, y: 0, width: 157, height: 314 },
       { x: 163, y: 0, width: 157, height: 157 },
@@ -34,7 +40,7 @@ describe("masonry", () => {
   });
 
   it("takes at least one column and no negative gutter", () => {
-    expect(masonry([tall(1, 320)], 300, 0, -10, { hideAttribution: true }).boxes).toEqual([{ x: 0, y: 0, width: 300, height: 300 }]);
+    expect(masonry([whole(1, 320)], 300, 0, -10, { hideAttribution: true }).boxes).toEqual([{ x: 0, y: 0, width: 300, height: 300 }]);
     expect(masonry([tall(1, 320)], 300, Number.NaN, 0).boxes[0]!.width).toBe(300);
   });
 

@@ -113,7 +113,11 @@ export interface CardProps {
   link: boolean;
   /** Called on a click on the frame. Without link, it makes the frame a button. */
   onClick?: (e: MouseEvent<HTMLElement>) => void;
-  /** Leave out the card and its credit line: the frame alone. */
+  /**
+   * Leave out the card and its credit line: the whole file, its credit
+   * strip showing. Full, unless tinyOnly, whatever the density: the frame
+   * takes its shape.
+   */
   hideAttribution?: boolean;
   /** The grid's shorter credit line, "by @handle". */
   shortCredit?: boolean;
@@ -126,7 +130,10 @@ export interface CardProps {
   id?: string;
 }
 
-/** A GIF cut to its frame, in the embed's card with the credit line under it. */
+/**
+ * A GIF cut to its frame, in the embed's card with the credit line under
+ * it. Without the card, the whole file, which carries the credit itself.
+ */
 export function Card({
   gif,
   width,
@@ -143,17 +150,27 @@ export function Card({
   style,
   id,
 }: CardProps) {
-  const frame = tinyOnly ? tinyFrameSize(gif) : frameSize(gif);
+  const file = tinyOnly ? gif.files.tiny : gif.files.full;
+  const frame = hideAttribution ? file : tinyOnly ? tinyFrameSize(gif) : frameSize(gif);
   const frameWidth = hideAttribution ? width : width - 2 * CARD_BORDER;
   const label = gifLabel(gif);
   const pic = picture ? (
-    <Picture gif={gif} width={frameWidth} tinyOnly={tinyOnly} alt="" lazy={lazy} onLoad={onLoad} onError={onError} />
+    <Picture
+      files={gif.files}
+      width={frameWidth}
+      only={tinyOnly ? "tiny" : hideAttribution ? "full" : undefined}
+      alt=""
+      lazy={lazy}
+      onLoad={onLoad}
+      onError={onError}
+    />
   ) : null;
   const shape: CSSProperties = { ...frameBase, aspectRatio: `${frame.width} / ${frame.height}` };
   const pointer = link || onClick ? { cursor: "pointer" } : null;
   const data = id ? { "data-ohmagif-id": id } : {};
 
-  // The frame alone: one element, named for those who cannot see it.
+  // The file alone, its credit strip showing: one element, named for
+  // those who cannot see it.
   if (hideAttribution) {
     const s = { ...shape, ...pointer, borderRadius: radius, ...style };
     const cls = `${className} ohmagif-frame`;

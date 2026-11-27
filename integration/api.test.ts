@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CREDIT_STRIP_HEIGHT, frameSize, OhmagifError, OhmagifFetch, tinyFrameSize, type Gif } from "../src/index.js";
+import { CREDIT_STRIP_HEIGHT, DEFAULT_MEDIA_URL, fileURL, frameSize, OhmagifError, OhmagifFetch, tinyFrameSize, type Gif } from "../src/index.js";
 
 const baseURL = process.env.OHMAGIF_BASE_URL ?? "https://ohmagif.com";
+const mediaURL = process.env.OHMAGIF_MEDIA_URL ?? DEFAULT_MEDIA_URL;
 const apiKey = process.env.OHMAGIF_API_KEY ?? "";
 if (!apiKey) throw new Error("OHMAGIF_API_KEY is not set: an ohmagif API key");
 
@@ -31,6 +32,9 @@ function expectUsable(g: Gif) {
   const { full, tiny, poster } = g.files;
   expect(g.url.startsWith(`${baseURL}/`)).toBe(true);
   expect([full.type, tiny.type, poster.type]).toEqual(["image/avif", "image/avif", "image/jpeg"]);
+  // Each file is where fileURL puts it, so a message that keeps the id can
+  // show the GIF without a request.
+  expect([full.url, tiny.url, poster.url]).toEqual([fileURL(g.id, "full", mediaURL), fileURL(g.id, "tiny", mediaURL), fileURL(g.id, "poster", mediaURL)]);
   // width and height are the full file's, credit strip and all.
   expect([full.width, full.height]).toEqual([g.width, g.height]);
   expect([poster.width, poster.height]).toEqual([g.width, g.height]);

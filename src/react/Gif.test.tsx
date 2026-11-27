@@ -57,11 +57,11 @@ describe("Gif", () => {
     const source = container.querySelector("source")!;
     expect(source.getAttribute("type")).toBe("image/avif");
     expect(source.getAttribute("srcset")).toBe(
-      "https://i.ohmagif.com/g/g000000001/e130eaf5/tiny.avif 320w, https://i.ohmagif.com/g/g000000001/e130eaf5/full.avif 640w",
+      "https://i.ohmagif.com/g/g000000001/tiny.avif 320w, https://i.ohmagif.com/g/g000000001/full.avif 640w",
     );
     expect(source.getAttribute("sizes")).toBe("200px");
     const img = container.querySelector("img")!;
-    expect(img.getAttribute("src")).toBe("https://i.ohmagif.com/g/g000000001/e130eaf5/poster.jpg");
+    expect(img.getAttribute("src")).toBe("https://i.ohmagif.com/g/g000000001/poster.jpg");
     expect(img.getAttribute("loading")).toBe("lazy");
     expect(img.getAttribute("decoding")).toBe("async");
     expect(img.getAttribute("referrerpolicy")).toBe("no-referrer");
@@ -106,16 +106,22 @@ describe("Gif", () => {
     ["a link", {}, "A"],
     ["a button", { noLink: true, onGifClick: () => {} }, "BUTTON"],
     ["a picture", { noLink: true }, "SPAN"],
-  ])("is the frame alone with hideAttribution, as %s", (_, props, tag) => {
+  ])("is the whole file with hideAttribution, its credit strip showing, as %s", (_, props, tag) => {
     const { container } = render(<Gif gif={gif(1)} width={320} hideAttribution {...props} />);
     const el = container.firstElementChild as HTMLElement;
     expect(el.tagName).toBe(tag);
     expect(el.className).toBe("ohmagif-gif ohmagif-frame");
     expect(el.getAttribute("aria-label")).toBe("Description g000000001");
-    expect(el.style.aspectRatio).toBe("640 / 400");
+    // full.avif's own shape, 640 x 424: the strip is not cut off.
+    expect(el.style.aspectRatio).toBe("640 / 424");
     expect(el.style.width).toBe("320px");
     expect(container.querySelector(".ohmagif-credit")).toBeNull();
     expect(container.querySelector("img")!.getAttribute("width")).toBe("320");
+    // tiny.avif's strip is as high as full's, so tiny is another shape: the
+    // frame shows full alone, whatever the density.
+    const source = container.querySelector("source")!;
+    expect(source.getAttribute("srcset")).toBe("https://i.ohmagif.com/g/g000000001/full.avif");
+    expect(source.hasAttribute("sizes")).toBe(false);
   });
 
   it("reports the file loading or failing", () => {

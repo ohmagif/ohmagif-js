@@ -15,13 +15,16 @@ export interface GifProps {
   noLink?: boolean;
   /** Called on a click on the frame. With noLink, the frame is a button. */
   onGifClick?: (gif: GifData, e: MouseEvent<HTMLElement>) => void;
-  /** The frame alone, without the card and its credit line. */
+  /**
+   * The whole file, its credit strip showing, without the card and its
+   * credit line. It is full.avif whatever the screen's density.
+   */
   hideAttribution?: boolean;
   /** Load the file only once the GIF is near the screen. On by default. */
   lazyLoad?: boolean;
   className?: string;
   onLoad?: () => void;
-  /** The file did not load: its address may be out of date, ask for the GIF again. */
+  /** The file did not load: the GIF was taken down, or the network failed. */
   onError?: () => void;
 }
 

@@ -1,10 +1,13 @@
 import { StrictMode, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { frameSize, isApiKey, OhmagifError, OhmagifFetch, type Gif as GifData } from "../src/index.js";
-import { Gif, gifSize, Grid } from "../src/react/index.js";
+import { gifLabel, isApiKey, OhmagifFetch, type Gif as GifData } from "../src/index.js";
+import { GifFromId, gifSize, Grid } from "../src/react/index.js";
 
 const params = new URLSearchParams(location.search);
 const base = params.get("base") ?? undefined;
+// Where that ohmagif serves its files, http://localhost:8080/media for one
+// run locally.
+const media = params.get("media") ?? undefined;
 const key = params.get("key") ?? import.meta.env.OHMAGIF_API_KEY ?? "";
 let gf: OhmagifFetch;
 
@@ -14,13 +17,14 @@ const MAX_WIDTH = 420;
 const MAX_HEIGHT = 320;
 
 /**
- * A sent message holds the GIF's id and the size of its frame, to keep its
- * room before it loads: nothing that can go stale.
+ * A sent message holds the GIF's id, the size of its file and what it
+ * shows: enough to draw it without a request, and nothing that goes stale.
  */
 interface Sent {
   id: string;
   width: number;
   height: number;
+  alt: string;
 }
 
 interface Message extends Sent {
@@ -28,34 +32,26 @@ interface Message extends Sent {
 }
 
 /** The width a message shows a GIF at: its own size, within 420 x 320. */
-function fit(frame: { width: number; height: number }) {
-  return Math.min(MAX_WIDTH, frame.width + 2, Math.floor((MAX_HEIGHT * frame.width) / frame.height) + 2);
+function fit(size: { width: number; height: number }) {
+  return Math.min(MAX_WIDTH, size.width, Math.floor((MAX_HEIGHT * size.width) / size.height));
 }
 
-/** A GIF in a message, asked for by id each time it shows. */
-function GifMessage({ id, width, height }: Sent) {
-  const [gif, setGif] = useState<GifData | null>(null);
-  const [failed, setFailed] = useState("");
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    const ctrl = new AbortController();
-    gf.gif(id, { signal: ctrl.signal }).then(
-      ({ data }) => setGif(data),
-      (err: unknown) => {
-        if (ctrl.signal.aborted) return;
-        setFailed(err instanceof OhmagifError && (err.code === "not_found" || err.code === "removed") ? "GIF removed" : "GIF unavailable");
-      },
+/**
+ * A GIF in a message, drawn from the message alone: its file comes from
+ * the CDN, and the API is not asked.
+ */
+function GifMessage({ id, width, height, alt }: Sent) {
+  const [failed, setFailed] = useState(false);
+  const size = { width, height };
+  const shown = fit(size);
+  if (failed) {
+    return (
+      <span className="placeholder" style={gifSize(size, shown, { hideAttribution: true })}>
+        GIF unavailable
+      </span>
     );
-    return () => ctrl.abort();
-  }, [id, attempt]);
-  // The room the GIF will take, known from the message alone, so nothing
-  // moves when it arrives.
-  const box = gifSize({ width, height }, fit({ width, height }));
-  if (failed) return <span className="placeholder" style={box}>{failed}</span>;
-  if (!gif) return <span className="placeholder" style={box} />;
-  // A file address that stopped working means the GIF was rendered again:
-  // asking for it once more gives the new one.
-  return <Gif gif={gif} width={box.width} onError={() => attempt === 0 && setAttempt(1)} />;
+  }
+  return <GifFromId id={id} size={size} width={shown} alt={alt} baseURL={base} mediaURL={media} onError={() => setFailed(true)} />;
 }
 
 function Picker({ onPick, onClose }: { onPick: (gif: GifData) => void; onClose: () => void }) {
@@ -110,7 +106,7 @@ function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [open, setOpen] = useState(false);
   const pick = useCallback((gif: GifData) => {
-    setMessages((m) => [...m, { key: Date.now(), id: gif.id, ...frameSize(gif) }]);
+    setMessages((m) => [...m, { key: Date.now(), id: gif.id, width: gif.width, height: gif.height, alt: gifLabel(gif) }]);
     setOpen(false);
   }, []);
   return (
@@ -120,7 +116,7 @@ function Chat() {
         {messages.map((m) => (
           <li key={m.key}>
             <code>ohmagif:{m.id}</code>
-            <GifMessage id={m.id} width={m.width} height={m.height} />
+            <GifMessage id={m.id} width={m.width} height={m.height} alt={m.alt} />
           </li>
         ))}
       </ol>

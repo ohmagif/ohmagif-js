@@ -4,6 +4,9 @@
 /** The site the API and its pages are on. */
 export const DEFAULT_BASE_URL = "https://ohmagif.com";
 
+/** Where ohmagif serves the GIFs' files. */
+export const DEFAULT_MEDIA_URL = "https://i.ohmagif.com";
+
 /** How suitable a GIF is: g, pg or pg13. ohmagif hosts nothing above pg13. */
 export type Rating = "g" | "pg" | "pg13";
 
@@ -162,6 +165,45 @@ export function parseGif(value: unknown): Gif | null {
     creator: by,
     files: { full, tiny, poster },
   };
+}
+
+/**
+ * A site's address with no slash at its end, for an option such as
+ * baseURL. Throws for anything that is not a plain http or https address.
+ */
+export function siteURL(raw: string, option: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new TypeError(`${option} is not an address: ${raw}`);
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new TypeError(`${option} must be http or https: ${raw}`);
+  }
+  if (url.search || url.hash || url.username || url.password) {
+    throw new TypeError(`${option} takes no query, fragment or credentials: ${raw}`);
+  }
+  return url.href.replace(/\/+$/, "");
+}
+
+/** One of a GIF's files. */
+export type FileName = keyof Gif["files"];
+
+const FILE_NAMES: Record<FileName, string> = { full: "full.avif", tiny: "tiny.avif", poster: "poster.jpg" };
+
+/**
+ * The address of one of a GIF's files, from its id alone. It stays the same
+ * while the GIF is up, so a message can keep the id and show the GIF later
+ * without a request. null for anything that is not a GIF id.
+ */
+export function fileURL(id: unknown, file: FileName, mediaURL: string = DEFAULT_MEDIA_URL): string | null {
+  return isGifId(id) ? `${siteURL(mediaURL, "mediaURL")}/g/${id}/${FILE_NAMES[file]}` : null;
+}
+
+/** The GIF's page, from its id alone. null for anything that is not a GIF id. */
+export function gifURL(id: unknown, baseURL: string = DEFAULT_BASE_URL): string | null {
+  return isGifId(id) ? `${siteURL(baseURL, "baseURL")}/g/${id}` : null;
 }
 
 /** The text that names a GIF to someone who cannot see it. */

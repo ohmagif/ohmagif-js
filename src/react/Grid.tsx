@@ -41,7 +41,7 @@ export interface GridProps {
   gutter?: number;
   /** Tiles are buttons rather than links to the GIF's page. */
   noLink?: boolean;
-  /** Tiles are the frame alone, without the card and its credit line. */
+  /** Tiles are the whole file, its credit strip showing, without the card and its credit line. */
   hideAttribution?: boolean;
   onGifClick?: (gif: GifData, e: MouseEvent<HTMLElement>) => void;
   /** Every GIF the grid holds, after each page. */

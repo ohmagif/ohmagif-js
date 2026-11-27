@@ -2,11 +2,13 @@ import { test as base, expect, type Locator, type Page } from "@playwright/test"
 import { CREDIT_STRIP_HEIGHT } from "../src/index.js";
 
 const api = process.env.OHMAGIF_BASE_URL;
+const media = process.env.OHMAGIF_MEDIA_URL;
 // The key the example was started or built with.
 const key = process.env.OHMAGIF_API_KEY ?? "";
 if (!key) throw new Error("OHMAGIF_API_KEY is not set: the example's ohmagif API key");
 const site = api ?? "https://ohmagif.com";
-const start = api ? `./?base=${encodeURIComponent(api)}` : "./";
+const query = new URLSearchParams({ ...(api && { base: api }), ...(media && { media }) }).toString();
+const start = query ? `./?${query}` : "./";
 
 // Every test fails on an error in the console, a refused Content-Security-
 // Policy included, or an exception on the page.
@@ -53,6 +55,13 @@ async function cuts(scope: Locator) {
         }),
     CREDIT_STRIP_HEIGHT,
   );
+}
+
+function expectStripShown(found: { cut: number }[]) {
+  for (const { cut } of found) {
+    // Nothing of the picture is cut off, but a pixel of rounding.
+    expect(Math.abs(cut)).toBeLessThanOrEqual(1);
+  }
 }
 
 function expectStripHidden(found: { clipped: boolean; cut: number; strip: number }[]) {
@@ -119,13 +128,18 @@ test("a search without matches offers the upload page", async ({ page }) => {
   await expect(upload).toHaveAttribute("rel", "noopener noreferrer");
 });
 
-test("a picked GIF is sent, and keeps the room it was given while it loads", async ({ page }) => {
-  // The message asks for its GIF a second late, so its placeholder shows.
-  await page.route(/\/api\/v1\/gifs\//, async (route) => {
+test("a picked GIF is sent and drawn from the message alone, its credit strip showing", async ({ page }) => {
+  const picker = await openPicker(page);
+  // From here on the API is not asked: the message's GIF comes from the CDN.
+  const asked: string[] = [];
+  page.on("request", (r) => {
+    if (r.url().startsWith(`${site}/api/`)) asked.push(r.url());
+  });
+  // Its file arrives a second late, so the room it was given shows first.
+  await page.route(/\/g\/[0-9A-Za-z]{10}\/(full|tiny)\.avif$/, async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await route.continue();
   });
-  const picker = await openPicker(page);
   const tile = picker.locator(".ohmagif-tile").first();
   const id = await tile.getAttribute("data-ohmagif-id");
   await tile.locator(".ohmagif-frame").click();
@@ -133,18 +147,18 @@ test("a picked GIF is sent, and keeps the room it was given while it loads", asy
 
   const message = page.getByRole("list", { name: "Messages" }).locator("li").last();
   await expect(message.locator("code")).toHaveText(`ohmagif:${id}`);
-  const before = (await message.locator(".placeholder").boundingBox())!;
   const card = message.locator(".ohmagif-gif");
+  const before = (await card.boundingBox())!;
   await expect.poll(async () => (await cuts(card)).length).toBe(1);
   const after = (await card.boundingBox())!;
   expect(Math.abs(after.height - before.height)).toBeLessThan(0.5);
   expect(Math.abs(after.width - before.width)).toBeLessThan(0.5);
-  expectStripHidden(await cuts(card));
+  expectStripShown(await cuts(card));
 
-  await expect(card).toHaveAttribute("href", new RegExp(`^${site}/g/[^/]*${id}$`));
+  await expect(card).toHaveAttribute("href", `${site}/g/${id}`);
   await expect(card).toHaveAttribute("target", "_blank");
-  await expect(card.locator(".ohmagif-credit")).toHaveText(/^(GIF by )?@\S+ on ohmagif\.com$/);
-  await expect(card.locator(".ohmagif-credit")).toHaveCSS("font-size", "12px");
+  await expect(card.locator(".ohmagif-credit")).toHaveCount(0);
+  expect(asked).toEqual([]);
 });
 
 test("draws the card in the embed's colours, light or dark", async ({ page }) => {
