@@ -20,7 +20,10 @@ describe("GifFromId", () => {
     expect(a.style.width).toBe("320px");
     expect(container.querySelector(".ohmagif-credit")).toBeNull();
     const source = container.querySelector("source")!;
-    expect(source.getAttribute("srcset")).toBe(`https://i.ohmagif.com/g/${id}/tiny.avif 320w, https://i.ohmagif.com/g/${id}/full.avif 640w`);
+    // full.avif whatever the density: tiny's strip is as high as full's, so
+    // tiny is another shape.
+    expect(source.getAttribute("srcset")).toBe(`https://i.ohmagif.com/g/${id}/full.avif`);
+    expect(source.hasAttribute("sizes")).toBe(false);
     const img = container.querySelector("img")!;
     expect(img.getAttribute("src")).toBe(`https://i.ohmagif.com/g/${id}/poster.jpg`);
     expect([img.getAttribute("width"), img.getAttribute("height"), img.getAttribute("loading")]).toEqual(["320", "212", "lazy"]);
@@ -37,7 +40,6 @@ describe("GifFromId", () => {
     expect(el.getAttribute("role")).toBe("img");
     expect(el.getAttribute("aria-label")).toBe("GIF");
     expect(el.className).toBe("ohmagif-gif msg ohmagif-frame");
-    // full.avif is no wider than tiny.avif: one file.
     expect(container.querySelector("source")!.getAttribute("srcset")).toBe(`http://localhost:8080/media/g/${id}/full.avif`);
     expect(container.querySelector("img")!.hasAttribute("loading")).toBe(false);
   });

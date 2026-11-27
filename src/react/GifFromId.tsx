@@ -1,6 +1,6 @@
 "use client";
 
-import { fileURL, gifURL, TINY_WIDTH, type Gif } from "../gif.js";
+import { fileURL, gifURL, type Gif } from "../gif.js";
 import { Card } from "./Card.js";
 import type { Size } from "./layout.js";
 
@@ -39,8 +39,8 @@ export function GifFromId({ id, size, width, alt = "", noLink = false, lazyLoad 
   const page = gifURL(id, baseURL);
   if (!page || !Number.isInteger(size.width) || !Number.isInteger(size.height) || size.width < 1 || size.height < 1) return null;
   const file = (name: keyof Gif["files"], type: string, w: number, h: number) => ({ url: fileURL(id, name, mediaURL)!, type, width: w, height: h, bytes: 0 });
-  const tinyHeight = Math.max(1, Math.round((TINY_WIDTH * size.height) / size.width));
-  // Only what the card reads when it shows the file alone.
+  // Only what the card reads when it shows the file alone: full.avif, never
+  // tiny.
   const gif: Gif = {
     id,
     title: "",
@@ -59,7 +59,7 @@ export function GifFromId({ id, size, width, alt = "", noLink = false, lazyLoad 
     creator: { handle: "", name: "", url: "" },
     files: {
       full: file("full", "image/avif", size.width, size.height),
-      tiny: file("tiny", "image/avif", TINY_WIDTH, tinyHeight),
+      tiny: file("tiny", "image/avif", size.width, size.height),
       poster: file("poster", "image/jpeg", size.width, size.height),
     },
   };

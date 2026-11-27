@@ -113,7 +113,11 @@ export interface CardProps {
   link: boolean;
   /** Called on a click on the frame. Without link, it makes the frame a button. */
   onClick?: (e: MouseEvent<HTMLElement>) => void;
-  /** Leave out the card and its credit line: the whole file, its credit strip showing. */
+  /**
+   * Leave out the card and its credit line: the whole file, its credit
+   * strip showing. Full, unless tinyOnly, whatever the density: the frame
+   * takes its shape.
+   */
   hideAttribution?: boolean;
   /** The grid's shorter credit line, "by @handle". */
   shortCredit?: boolean;
@@ -151,7 +155,15 @@ export function Card({
   const frameWidth = hideAttribution ? width : width - 2 * CARD_BORDER;
   const label = gifLabel(gif);
   const pic = picture ? (
-    <Picture files={gif.files} width={frameWidth} tinyOnly={tinyOnly} alt="" lazy={lazy} onLoad={onLoad} onError={onError} />
+    <Picture
+      files={gif.files}
+      width={frameWidth}
+      only={tinyOnly ? "tiny" : hideAttribution ? "full" : undefined}
+      alt=""
+      lazy={lazy}
+      onLoad={onLoad}
+      onError={onError}
+    />
   ) : null;
   const shape: CSSProperties = { ...frameBase, aspectRatio: `${frame.width} / ${frame.height}` };
   const pointer = link || onClick ? { cursor: "pointer" } : null;

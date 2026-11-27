@@ -192,9 +192,6 @@ export type FileName = keyof Gif["files"];
 
 const FILE_NAMES: Record<FileName, string> = { full: "full.avif", tiny: "tiny.avif", poster: "poster.jpg" };
 
-/** The width of every tiny.avif, in pixels. */
-export const TINY_WIDTH = 320;
-
 /**
  * The address of one of a GIF's files, from its id alone. It stays the same
  * while the GIF is up, so a message can keep the id and show the GIF later

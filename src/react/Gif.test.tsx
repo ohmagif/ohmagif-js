@@ -117,6 +117,11 @@ describe("Gif", () => {
     expect(el.style.width).toBe("320px");
     expect(container.querySelector(".ohmagif-credit")).toBeNull();
     expect(container.querySelector("img")!.getAttribute("width")).toBe("320");
+    // tiny.avif's strip is as high as full's, so tiny is another shape: the
+    // frame shows full alone, whatever the density.
+    const source = container.querySelector("source")!;
+    expect(source.getAttribute("srcset")).toBe("https://i.ohmagif.com/g/g000000001/full.avif");
+    expect(source.hasAttribute("sizes")).toBe(false);
   });
 
   it("reports the file loading or failing", () => {
